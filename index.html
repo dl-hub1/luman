@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lumen Takedown Trends Analyzer</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #f5f5f3;
+      --surface-1: #ffffff;
+      --surface-2: #f0efeb;
+      --border: #dddbd3;
+      --text-primary: #1a1a18;
+      --text-secondary: #4a4a46;
+      --text-muted: #898781;
+      --text-accent: #2a78d6;
+      --radius: 8px;
+      --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      --font-mono: "SF Mono", "Fira Code", monospace;
+    }
+
+    body {
+      background: var(--bg);
+      font-family: var(--font-sans);
+      color: var(--text-primary);
+      min-height: 100vh;
+      padding: 2rem 1rem;
+    }
+
+    .page-wrap {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .page-header {
+      margin-bottom: 1.5rem;
+    }
+
+    .page-header h1 {
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--text-primary);
+      letter-spacing: -0.3px;
+    }
+
+    .page-header p {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    /* Config card */
+    .config-card {
+      background: var(--surface-1);
+      border: 0.5px solid var(--border);
+      border-radius: 12px;
+      padding: 1.1rem 1.25rem;
+      margin-bottom: 1rem;
+    }
+
+    .config-row {
+      display: flex;
+      gap: 8px;
+      align-items: flex-end;
+      flex-wrap: wrap;
+    }
+
+    .field-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      flex: 1;
+      min-width: 140px;
+    }
+
+    .field-label {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    input[type="text"],
+    input[type="password"],
+    select {
+      background: var(--surface-2);
+      border: 0.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 7px 10px;
+      font-size: 13px;
+      color: var(--text-primary);
+      font-family: var(--font-sans);
+      outline: none;
+      transition: border-color 0.15s;
+      width: 100%;
+    }
+
+    input[type="text"]:focus,
+    input[type="password"]:focus,
+    select:focus {
+      border-color: var(--text-accent);
+    }
+
+    button {
+      background: var(--text-primary);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius);
+      padding: 7px 14px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      font-family: var(--font-sans);
+      transition: opacity 0.15s;
+      white-space: nowrap;
+    }
+
+    button:hover { opacity: 0.85; }
+    button:disabled { opacity: 0.45; cursor: not-allowed; }
+
+    .token-hint {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    .token-hint a { color: var(--text-accent); text-decoration: none; }
+    .token-hint a:hover { text-decoration: underline; }
+
+    /* Metrics */
+    .metrics-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 10px;
+      margin-bottom: 1rem;
+    }
+
+    .metric-card {
+      background: var(--surface-1);
+      border: 0.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 0.85rem 1rem;
+    }
+
+    .metric-label { font-size: 12px; color: var(--text-muted); margin-bottom: 4px; }
+    .metric-value { font-size: 22px; font-weight: 600; color: var(--text-primary); }
+    .metric-sub { font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
+
+    /* Charts */
+    .charts-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 1rem;
+    }
+
+    .chart-card {
+      background: var(--surface-1);
+      border: 0.5px solid var(--border);
+      border-radius: 12px;
+      padding: 1rem 1.25rem;
+    }
+
+    .chart-title {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      margin-bottom: 10px;
+    }
+
+    .legend-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 8px;
+      font-size: 11px;
+      color: var(--text-secondary);
+    }
+
+    .legend-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 2px;
+      display: inline-block;
+      margin-right: 4px;
+      vertical-align: middle;
+    }
+
+    /* Notice list */
+    .notice-list {
+      background: var(--surface-1);
+      border: 0.5px solid var(--border);
+      border-radius: 12px;
+      padding: 1rem 1.25rem;
+    }
+
+    .section-title {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      margin-bottom: 10px;
+    }
+
+    .notice-item {
+      padding: 10px 0;
+      border-bottom: 0.5px solid var(--border);
+    }
+
+    .notice-item:last-child { border-bottom: none; }
+
+    .notice-title {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-primary);
+      margin-bottom: 4px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .notice-title a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .notice-title a:hover { text-decoration: underline; }
+
+    .notice-meta {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .badge {
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-weight: 500;
+    }
+
+    .badge-dmca { background: #E6F1FB; color: #0C447C; }
+    .badge-trademark { background: #FAEEDA; color: #633806; }
+    .badge-defamation { background: #FCEBEB; color: #791F1F; }
+    .badge-other { background: var(--surface-2); color: var(--text-secondary); border: 0.5px solid var(--border); }
+
+    .notice-date {
+      font-size: 11px;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 3px;
+    }
+
+    /* States */
+    .empty-state {
+      text-align: center;
+      padding: 3rem 1rem;
+      color: var(--text-muted);
+      font-size: 14px;
+    }
+
+    .empty-state .icon {
+      font-size: 32px;
+      display: block;
+      margin-bottom: 8px;
+      opacity: 0.4;
+    }
+
+    .error-msg {
+      background: #FCEBEB;
+      border: 0.5px solid #F09595;
+      border-radius: var(--radius);
+      padding: 10px 14px;
+      font-size: 13px;
+      color: #791F1F;
+      margin-bottom: 1rem;
+      display: flex;
+      gap: 8px;
+      align-items: flex-start;
+    }
+
+    .cors-note {
+      background: #FFF8E6;
+      border: 0.5px solid #F0D070;
+      border-radius: var(--radius);
+      padding: 10px 14px;
+      font-size: 12px;
+      color: #5a4000;
+      margin-bottom: 1rem;
+    }
+
+    .cors-note strong { display: block; margin-bottom: 2px; }
+
+    @media (max-width: 560px) {
+      .charts-grid { grid-template-columns: 1fr; }
+      .config-row { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <div class="page-header">
+    <h1>Lumen Takedown Trends Analyzer</h1>
+    <p>Search and visualize copyright takedown notices from the Lumen Database.</p>
+  </div>
+
+  <!-- Config -->
+  <div class="config-card">
+    <div class="config-row">
+      <div class="field-group" style="flex: 2; min-width: 200px;">
+        <label class="field-label" for="search-term">Search keyword</label>
+        <input type="text" id="search-term" placeholder="e.g. YouTube, copyright, DMCA…" />
+      </div>
+      <div class="field-group">
+        <label class="field-label" for="notice-type">Notice type</label>
+        <select id="notice-type">
+          <option value="">All types</option>
+          <option value="DMCA">DMCA</option>
+          <option value="Trademark">Trademark</option>
+          <option value="Defamation">Defamation</option>
+          <option value="CourtOrder">Court order</option>
+          <option value="DataProtection">Data protection</option>
+        </select>
+      </div>
+      <div class="field-group" style="max-width: 100px;">
+        <label class="field-label" for="per-page">Results</label>
+        <select id="per-page">
+          <option value="10">10</option>
+          <option value="25" selected>25</option>
+          <option value="50">50</option>
+        </select>
+      </div>
+      <div class="field-group" style="flex: 0;">
+        <label class="field-label">&nbsp;</label>
+        <button id="search-btn" onclick="doSearch()">
+          <i class="ti ti-search"></i> Search
+        </button>
+      </div>
+    </div>
+
+    <div class="field-group" style="margin-top: 12px;">
+      <label class="field-label" for="api-token">API token <span style="font-weight:400;">(optional — higher rate limits)</span></label>
+      <input type="password" id="api-token" placeholder="Paste your Lumen API token here…" style="font-family: var(--font-mono); font-size: 12px;" />
+      <div class="token-hint">
+        Request a free research token at <a href="https://lumendatabase.org/pages/api_terms" target="_blank">lumendatabase.org</a> — email team@lumendatabase.org
+      </div>
+    </div>
+  </div>
+
+  <!-- CORS note (always visible) -->
+  <div class="cors-note">
+    <strong>ℹ️ Note about browser requests</strong>
+    This tool routes API calls through a CORS proxy (corsproxy.io) because browsers block direct cross-origin requests to the Lumen API. Your search term and token are sent only to Lumen — the proxy just relays the request.
+  </div>
+
+  <div id="error-box" style="display:none;"></div>
+  <div id="empty-state" class="empty-state">
+    <i class="ti ti-database icon"></i>
+    Enter a keyword above and click Search to explore takedown trends.
+  </div>
+
+  <div id="results-section" style="display:none;">
+    <div class="metrics-row" id="metrics-row"></div>
+    <div class="charts-grid">
+      <div class="chart-card">
+        <div class="chart-title">Notices by type</div>
+        <div class="legend-row" id="type-legend"></div>
+        <div style="position:relative; height:180px;">
+          <canvas id="typeChart" role="img" aria-label="Bar chart: notices by type"></canvas>
+        </div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Top recipients (platforms)</div>
+        <div id="recipientWrap" style="position:relative; height:210px;">
+          <canvas id="recipientChart" role="img" aria-label="Horizontal bar chart: top recipients"></canvas>
+        </div>
+      </div>
+    </div>
+    <div class="notice-list">
+      <div class="section-title">Recent notices</div>
+      <div id="notice-list-body"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+let typeChart, recipientChart;
+
+const COLORS = ['#2a78d6','#1baf7a','#eda100','#e34948','#4a3aa7','#008300','#e87ba4','#eb6834'];
+
+// ── CORS proxy prefix ──────────────────────────────────────────────────────
+const PROXY = 'https://corsproxy.io/?';
+
+function proxied(url) {
+  return PROXY + encodeURIComponent(url);
+}
+
+// ── Helpers ────────────────────────────────────────────────────────────────
+function badgeClass(type) {
+  if (!type) return 'badge-other';
+  const t = type.toLowerCase();
+  if (t.includes('dmca') || t.includes('copyright')) return 'badge-dmca';
+  if (t.includes('trademark')) return 'badge-trademark';
+  if (t.includes('defamation')) return 'badge-defamation';
+  return 'badge-other';
+}
+
+function formatDate(d) {
+  if (!d) return '';
+  return new Date(d).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+}
+
+function countBy(arr, key) {
+  const map = {};
+  arr.forEach(n => {
+    const val = n[key] || 'Unknown';
+    map[val] = (map[val] || 0) + 1;
+  });
+  return map;
+}
+
+function showError(msg) {
+  const box = document.getElementById('error-box');
+  box.innerHTML = `<div class="error-msg"><i class="ti ti-alert-circle"></i><span>${msg}</span></div>`;
+  box.style.display = 'block';
+}
+
+// ── Main search ────────────────────────────────────────────────────────────
+async function doSearch() {
+  const term    = document.getElementById('search-term').value.trim();
+  const token   = document.getElementById('api-token').value.trim();
+  const type    = document.getElementById('notice-type').value;
+  const perPage = document.getElementById('per-page').value;
+
+  // Reset UI
+  document.getElementById('error-box').style.display = 'none';
+  document.getElementById('results-section').style.display = 'none';
+  const emptyEl = document.getElementById('empty-state');
+  emptyEl.innerHTML = '<i class="ti ti-loader icon" style="animation:spin 1s linear infinite;"></i>Searching Lumen Database…';
+  emptyEl.style.display = 'block';
+  document.getElementById('search-btn').disabled = true;
+
+  // Build Lumen API URL
+  let apiUrl = `https://lumendatabase.org/notices/search?per_page=${perPage}&sort_by=date_received+desc`;
+  if (term)  apiUrl += `&term=${encodeURIComponent(term)}`;
+  if (type)  apiUrl += `&type=${encodeURIComponent(type)}`;
+
+  // Headers — do NOT include User-Agent (forbidden header in browsers)
+  const headers = { 'Accept': 'application/json' };
+  if (token) headers['X-Authentication-Token'] = token;
+
+  try {
+    const resp = await fetch(proxied(apiUrl), { headers });
+
+    if (!resp.ok) {
+      let hint = 'Try a different search or check your connection.';
+      if (resp.status === 401) hint = 'Check your API token — it may be invalid or expired.';
+      if (resp.status === 429) hint = 'Rate limited. Add an API token for higher limits, or wait a moment.';
+      throw new Error(`Lumen API returned ${resp.status}. ${hint}`);
+    }
+
+    const data    = await resp.json();
+    const notices = data.notices || [];
+    const meta    = data.meta    || {};
+
+    emptyEl.style.display = 'none';
+
+    if (notices.length === 0) {
+      emptyEl.innerHTML = '<i class="ti ti-mood-empty icon"></i>No notices matched your search. Try a broader term.';
+      emptyEl.style.display = 'block';
+      return;
+    }
+
+    document.getElementById('results-section').style.display = 'block';
+    renderMetrics(notices, meta);
+    renderTypeChart(notices);
+    renderRecipientChart(notices);
+    renderNoticeList(notices);
+
+  } catch (e) {
+    emptyEl.style.display = 'none';
+    showError(e.message || 'Could not reach the Lumen API. Check your connection and try again.');
+  } finally {
+    document.getElementById('search-btn').disabled = false;
+  }
+}
+
+// ── Renderers ──────────────────────────────────────────────────────────────
+function renderMetrics(notices, meta) {
+  const total      = meta.total_results || notices.length;
+  const types      = new Set(notices.map(n => n.type)).size;
+  const recipients = new Set(notices.flatMap(n => n.recipient_names || [])).size;
+  const avgUrls    = notices.length
+    ? Math.round(notices.reduce((s, n) => s + (n.infringing_urls_count || 0), 0) / notices.length)
+    : 0;
+
+  document.getElementById('metrics-row').innerHTML = `
+    <div class="metric-card">
+      <div class="metric-label">Total results</div>
+      <div class="metric-value">${total.toLocaleString()}</div>
+      <div class="metric-sub">matching notices</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">Showing</div>
+      <div class="metric-value">${notices.length}</div>
+      <div class="metric-sub">on this page</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">Notice types</div>
+      <div class="metric-value">${types}</div>
+      <div class="metric-sub">distinct types</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">Platforms</div>
+      <div class="metric-value">${recipients}</div>
+      <div class="metric-sub">unique recipients</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">Avg URLs flagged</div>
+      <div class="metric-value">${avgUrls.toLocaleString()}</div>
+      <div class="metric-sub">per notice</div>
+    </div>`;
+}
+
+function renderTypeChart(notices) {
+  const counts = countBy(notices, 'type');
+  const labels = Object.keys(counts).sort((a, b) => counts[b] - counts[a]);
+  const values = labels.map(l => counts[l]);
+  const colors = labels.map((_, i) => COLORS[i % COLORS.length]);
+
+  document.getElementById('type-legend').innerHTML = labels
+    .map((l, i) => `<span><span class="legend-dot" style="background:${colors[i]};"></span>${l} (${counts[l]})</span>`)
+    .join('');
+
+  if (typeChart) typeChart.destroy();
+  typeChart = new Chart(document.getElementById('typeChart').getContext('2d'), {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{ data: values, backgroundColor: colors, borderRadius: 4, borderSkipped: false }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: c => ` ${c.parsed.y} notices` } }
+      },
+      scales: {
+        x: { grid: { display: false }, ticks: { color: '#898781', font: { size: 11 } } },
+        y: { grid: { color: '#e1e0d9' }, ticks: { color: '#898781', font: { size: 11 }, precision: 0 }, beginAtZero: true }
+      }
+    }
+  });
+}
+
+function renderRecipientChart(notices) {
+  const counts = {};
+  notices.forEach(n => {
+    (n.recipient_names || []).forEach(r => { counts[r] = (counts[r] || 0) + 1; });
+  });
+
+  const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 8);
+  const labels = sorted.map(e => e[0]);
+  const values = sorted.map(e => e[1]);
+
+  const wrapHeight = Math.max(180, labels.length * 28 + 40);
+  document.getElementById('recipientWrap').style.height = wrapHeight + 'px';
+
+  if (recipientChart) recipientChart.destroy();
+  recipientChart = new Chart(document.getElementById('recipientChart').getContext('2d'), {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{ data: values, backgroundColor: '#2a78d6', borderRadius: 4, borderSkipped: false }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: c => ` ${c.parsed.x} notices` } }
+      },
+      scales: {
+        x: { grid: { color: '#e1e0d9' }, ticks: { color: '#898781', font: { size: 11 }, precision: 0 }, beginAtZero: true },
+        y: { grid: { display: false }, ticks: { color: '#898781', font: { size: 11 } } }
+      }
+    }
+  });
+}
+
+function renderNoticeList(notices) {
+  if (!notices.length) {
+    document.getElementById('notice-list-body').innerHTML =
+      '<div style="color:var(--text-muted);font-size:13px;padding:1rem 0;">No notices to display.</div>';
+    return;
+  }
+
+  document.getElementById('notice-list-body').innerHTML = notices.slice(0, 15).map(n => {
+    const type      = n.type || 'Unknown';
+    const bClass    = badgeClass(type);
+    const recipient = (n.recipient_names || []).join(', ') || '—';
+    const sender    = n.sender_name || n.principal_name || '—';
+    const urls      = n.infringing_urls_count || 0;
+    const date      = formatDate(n.date_received);
+    const title     = n.title || `Notice #${n.id}`;
+    const link      = n.id ? `https://lumendatabase.org/notices/${n.id}` : '#';
+
+    return `<div class="notice-item">
+      <div class="notice-title">
+        <a href="${link}" target="_blank" rel="noopener">${title}</a>
+      </div>
+      <div class="notice-meta">
+        <span class="badge ${bClass}">${type}</span>
+        <span class="notice-date"><i class="ti ti-building" style="font-size:11px;"></i> ${recipient}</span>
+        <span class="notice-date"><i class="ti ti-user" style="font-size:11px;"></i> ${sender}</span>
+        ${urls ? `<span class="notice-date"><i class="ti ti-link" style="font-size:11px;"></i> ${urls.toLocaleString()} URLs</span>` : ''}
+        <span class="notice-date"><i class="ti ti-calendar" style="font-size:11px;"></i> ${date}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// Enter key triggers search
+document.getElementById('search-term').addEventListener('keydown', e => {
+  if (e.key === 'Enter') doSearch();
+});
+
+// Spinner animation
+const style = document.createElement('style');
+style.textContent = '@keyframes spin { to { transform: rotate(360deg); } }';
+document.head.appendChild(style);
+</script>
+</body>
+</html>
