@@ -8,210 +8,123 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
     :root {
-      --bg: #f5f5f3;
-      --surface-1: #ffffff;
-      --surface-2: #f0efeb;
-      --border: #dddbd3;
-      --text-primary: #1a1a18;
-      --text-secondary: #4a4a46;
-      --text-muted: #898781;
-      --text-accent: #2a78d6;
-      --radius: 8px;
-      --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      --font-mono: "SF Mono", "Fira Code", monospace;
+      --bg:#f5f5f3; --surface-1:#fff; --surface-2:#f0efeb; --border:#dddbd3;
+      --text-primary:#1a1a18; --text-secondary:#4a4a46; --text-muted:#898781;
+      --text-accent:#2a78d6; --radius:8px;
+      --font-sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+      --font-mono:"SF Mono","Fira Code",monospace;
     }
+    @keyframes spin    { to { transform:rotate(360deg); } }
+    @keyframes fadeIn  { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+    @keyframes pulse   { 0%,100%{opacity:1} 50%{opacity:.3} }
 
-    @keyframes spin { to { transform: rotate(360deg); } }
-    @keyframes fadeIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
+    body { background:var(--bg); font-family:var(--font-sans); color:var(--text-primary); min-height:100vh; padding:2rem 1rem; }
+    .page-wrap { max-width:900px; margin:0 auto; }
+    .page-header { margin-bottom:1.5rem; }
+    .page-header h1 { font-size:20px; font-weight:600; letter-spacing:-.3px; }
+    .page-header p  { font-size:13px; color:var(--text-muted); margin-top:4px; }
 
-    body {
-      background: var(--bg);
-      font-family: var(--font-sans);
-      color: var(--text-primary);
-      min-height: 100vh;
-      padding: 2rem 1rem;
+    .config-card { background:var(--surface-1); border:.5px solid var(--border); border-radius:12px; padding:1.1rem 1.25rem; margin-bottom:1rem; }
+    .config-row  { display:flex; gap:8px; align-items:flex-end; flex-wrap:wrap; }
+    .field-group { display:flex; flex-direction:column; gap:4px; flex:1; min-width:140px; }
+    .field-label { font-size:12px; color:var(--text-muted); font-weight:500; }
+
+    input[type=text],input[type=password],select {
+      background:var(--surface-2); border:.5px solid var(--border); border-radius:var(--radius);
+      padding:7px 10px; font-size:13px; color:var(--text-primary); font-family:var(--font-sans);
+      outline:none; transition:border-color .15s; width:100%;
     }
-
-    .page-wrap { max-width: 900px; margin: 0 auto; }
-
-    .page-header { margin-bottom: 1.5rem; }
-    .page-header h1 { font-size: 20px; font-weight: 600; color: var(--text-primary); letter-spacing: -0.3px; }
-    .page-header p  { font-size: 13px; color: var(--text-muted); margin-top: 4px; }
-
-    .config-card {
-      background: var(--surface-1);
-      border: 0.5px solid var(--border);
-      border-radius: 12px;
-      padding: 1.1rem 1.25rem;
-      margin-bottom: 1rem;
-    }
-    .config-row { display: flex; gap: 8px; align-items: flex-end; flex-wrap: wrap; }
-    .field-group { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 140px; }
-    .field-label { font-size: 12px; color: var(--text-muted); font-weight: 500; }
-
-    input[type="text"], input[type="password"], select {
-      background: var(--surface-2);
-      border: 0.5px solid var(--border);
-      border-radius: var(--radius);
-      padding: 7px 10px;
-      font-size: 13px;
-      color: var(--text-primary);
-      font-family: var(--font-sans);
-      outline: none;
-      transition: border-color 0.15s;
-      width: 100%;
-    }
-    input[type="text"]:focus, input[type="password"]:focus, select:focus { border-color: var(--text-accent); }
+    input:focus,select:focus { border-color:var(--text-accent); }
 
     button {
-      background: var(--text-primary);
-      color: #fff;
-      border: none;
-      border-radius: var(--radius);
-      padding: 7px 14px;
-      font-size: 13px;
-      font-weight: 500;
-      cursor: pointer;
-      font-family: var(--font-sans);
-      transition: opacity 0.15s;
-      white-space: nowrap;
+      background:var(--text-primary); color:#fff; border:none; border-radius:var(--radius);
+      padding:7px 14px; font-size:13px; font-weight:500; cursor:pointer;
+      font-family:var(--font-sans); transition:opacity .15s; white-space:nowrap;
     }
-    button:hover { opacity: 0.85; }
-    button:disabled { opacity: 0.45; cursor: not-allowed; }
-    button.btn-secondary {
-      background: var(--surface-2);
-      color: var(--text-primary);
-      border: 0.5px solid var(--border);
-    }
+    button:hover { opacity:.85; }
+    button:disabled { opacity:.4; cursor:not-allowed; }
+    .btn-secondary { background:var(--surface-2); color:var(--text-primary); border:.5px solid var(--border); }
+    .btn-accent    { background:#2a78d6; color:#fff; }
 
-    .token-hint { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
-    .token-hint a { color: var(--text-accent); text-decoration: none; }
-    .token-hint a:hover { text-decoration: underline; }
+    .token-hint { font-size:11px; color:var(--text-muted); margin-top:4px; }
+    .token-hint a { color:var(--text-accent); text-decoration:none; }
 
-    /* Metrics */
-    .metrics-row {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-      gap: 10px; margin-bottom: 1rem;
-    }
-    .metric-card { background: var(--surface-1); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 0.85rem 1rem; }
-    .metric-label { font-size: 12px; color: var(--text-muted); margin-bottom: 4px; }
-    .metric-value { font-size: 22px; font-weight: 600; color: var(--text-primary); }
-    .metric-sub   { font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
+    .metrics-row { display:grid; grid-template-columns:repeat(auto-fit,minmax(130px,1fr)); gap:10px; margin-bottom:1rem; }
+    .metric-card { background:var(--surface-1); border:.5px solid var(--border); border-radius:var(--radius); padding:.85rem 1rem; }
+    .metric-label { font-size:12px; color:var(--text-muted); margin-bottom:4px; }
+    .metric-value { font-size:22px; font-weight:600; }
+    .metric-sub   { font-size:11px; color:var(--text-secondary); margin-top:2px; }
 
-    /* Charts */
-    .charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 1rem; }
-    .chart-card { background: var(--surface-1); border: 0.5px solid var(--border); border-radius: 12px; padding: 1rem 1.25rem; }
-    .chart-title { font-size: 13px; font-weight: 500; color: var(--text-secondary); margin-bottom: 10px; }
-    .legend-row { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 8px; font-size: 11px; color: var(--text-secondary); }
-    .legend-dot { width: 10px; height: 10px; border-radius: 2px; display: inline-block; margin-right: 4px; vertical-align: middle; }
+    .charts-grid  { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:1rem; }
+    .chart-card   { background:var(--surface-1); border:.5px solid var(--border); border-radius:12px; padding:1rem 1.25rem; }
+    .chart-title  { font-size:13px; font-weight:500; color:var(--text-secondary); margin-bottom:10px; }
+    .legend-row   { display:flex; flex-wrap:wrap; gap:10px; margin-bottom:8px; font-size:11px; color:var(--text-secondary); }
+    .legend-dot   { width:10px; height:10px; border-radius:2px; display:inline-block; margin-right:4px; vertical-align:middle; }
 
-    /* Notice list */
-    .notice-list { background: var(--surface-1); border: 0.5px solid var(--border); border-radius: 12px; padding: 1rem 1.25rem; }
-    .section-title { font-size: 13px; font-weight: 500; color: var(--text-secondary); margin-bottom: 10px; }
-    .notice-item { padding: 10px 0; border-bottom: 0.5px solid var(--border); }
-    .notice-item:last-child { border-bottom: none; }
-    .notice-title { font-size: 13px; font-weight: 500; color: var(--text-primary); margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .notice-title a { color: inherit; text-decoration: none; }
-    .notice-title a:hover { text-decoration: underline; }
-    .notice-meta { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
-    .badge { font-size: 11px; padding: 2px 8px; border-radius: 4px; font-weight: 500; }
-    .badge-dmca       { background: #E6F1FB; color: #0C447C; }
-    .badge-trademark  { background: #FAEEDA; color: #633806; }
-    .badge-defamation { background: #FCEBEB; color: #791F1F; }
-    .badge-other      { background: var(--surface-2); color: var(--text-secondary); border: 0.5px solid var(--border); }
-    .notice-date { font-size: 11px; color: var(--text-muted); display: flex; align-items: center; gap: 3px; }
+    .notice-list  { background:var(--surface-1); border:.5px solid var(--border); border-radius:12px; padding:1rem 1.25rem; }
+    .section-title{ font-size:13px; font-weight:500; color:var(--text-secondary); margin-bottom:10px; }
+    .notice-item  { padding:10px 0; border-bottom:.5px solid var(--border); }
+    .notice-item:last-child { border-bottom:none; }
+    .notice-title { font-size:13px; font-weight:500; margin-bottom:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .notice-title a { color:inherit; text-decoration:none; }
+    .notice-title a:hover { text-decoration:underline; }
+    .notice-meta  { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+    .badge        { font-size:11px; padding:2px 8px; border-radius:4px; font-weight:500; }
+    .badge-dmca        { background:#E6F1FB; color:#0C447C; }
+    .badge-trademark   { background:#FAEEDA; color:#633806; }
+    .badge-defamation  { background:#FCEBEB; color:#791F1F; }
+    .badge-other       { background:var(--surface-2); color:var(--text-secondary); border:.5px solid var(--border); }
+    .notice-date  { font-size:11px; color:var(--text-muted); display:flex; align-items:center; gap:3px; }
 
-    /* States */
-    .empty-state { text-align: center; padding: 3rem 1rem; color: var(--text-muted); font-size: 14px; }
-    .empty-state .icon { font-size: 32px; display: block; margin-bottom: 8px; opacity: 0.4; }
+    .empty-state  { text-align:center; padding:3rem 1rem; color:var(--text-muted); font-size:14px; }
+    .empty-state .icon { font-size:32px; display:block; margin-bottom:8px; opacity:.4; }
+    .error-msg    { background:#FCEBEB; border:.5px solid #F09595; border-radius:var(--radius); padding:10px 14px; font-size:13px; color:#791F1F; margin-bottom:1rem; display:flex; gap:8px; align-items:flex-start; }
 
-    .error-msg { background: #FCEBEB; border: 0.5px solid #F09595; border-radius: var(--radius); padding: 10px 14px; font-size: 13px; color: #791F1F; margin-bottom: 1rem; display: flex; gap: 8px; align-items: flex-start; }
-
-    /* ── CAPTCHA modal overlay ─────────────────────────────────────────── */
+    /* ── CAPTCHA modal ──────────────────────────────────────────── */
     #captcha-overlay {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.55);
-      z-index: 9999;
-      align-items: center;
-      justify-content: center;
-      animation: fadeIn 0.2s ease;
+      display:none; position:fixed; inset:0;
+      background:rgba(0,0,0,.55); z-index:9999;
+      align-items:center; justify-content:center;
     }
-    #captcha-overlay.active { display: flex; }
-
+    #captcha-overlay.active { display:flex; animation:fadeIn .2s ease; }
     .captcha-modal {
-      background: var(--surface-1);
-      border-radius: 16px;
-      padding: 1.75rem 2rem;
-      max-width: 440px;
-      width: calc(100% - 2rem);
-      box-shadow: 0 20px 60px rgba(0,0,0,0.25);
-      animation: fadeIn 0.2s ease;
-      text-align: center;
+      background:var(--surface-1); border-radius:16px;
+      padding:1.75rem 2rem; max-width:460px; width:calc(100% - 2rem);
+      box-shadow:0 20px 60px rgba(0,0,0,.25); animation:fadeIn .2s ease;
+    }
+    .captcha-icon  { font-size:40px; color:#eda100; margin-bottom:.6rem; text-align:center; }
+    .captcha-modal h2 { font-size:17px; font-weight:600; margin-bottom:8px; text-align:center; }
+    .captcha-modal .sub { font-size:13px; color:var(--text-secondary); line-height:1.6; margin-bottom:1rem; text-align:center; }
+
+    .steps-box {
+      background:var(--surface-2); border-radius:var(--radius);
+      padding:.9rem 1rem; margin-bottom:1.2rem;
+      font-size:13px; color:var(--text-secondary); line-height:2;
+    }
+    .steps-box .step { display:flex; gap:10px; align-items:flex-start; }
+    .step-num {
+      background:var(--text-primary); color:#fff;
+      width:20px; height:20px; border-radius:50%;
+      font-size:11px; font-weight:700;
+      display:flex; align-items:center; justify-content:center;
+      flex-shrink:0; margin-top:2px;
     }
 
-    .captcha-icon {
-      font-size: 44px;
-      color: #eda100;
-      margin-bottom: 0.75rem;
-    }
+    .captcha-btn-row { display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin-bottom:.75rem; }
 
-    .captcha-modal h2 {
-      font-size: 17px;
-      font-weight: 600;
-      color: var(--text-primary);
-      margin-bottom: 8px;
-    }
+    .captcha-status { font-size:12px; color:var(--text-muted); text-align:center; min-height:18px; }
+    .captcha-status.waiting { color:#eda100; }
+    .captcha-status.ok      { color:#1baf7a; font-weight:500; }
+    .captcha-status.err     { color:#791F1F; }
 
-    .captcha-modal p {
-      font-size: 13px;
-      color: var(--text-secondary);
-      line-height: 1.6;
-      margin-bottom: 1.25rem;
-    }
+    .pulse-dot { display:inline-block; width:7px; height:7px; border-radius:50%; background:currentColor; margin-right:5px; vertical-align:middle; animation:pulse 1.4s ease infinite; }
 
-    .captcha-steps {
-      text-align: left;
-      background: var(--surface-2);
-      border-radius: var(--radius);
-      padding: 0.85rem 1rem;
-      margin-bottom: 1.25rem;
-      font-size: 13px;
-      color: var(--text-secondary);
-      line-height: 1.8;
-    }
-    .captcha-steps b { color: var(--text-primary); }
+    /* progress bar shown while polling */
+    .poll-bar-wrap { height:3px; background:var(--surface-2); border-radius:2px; margin-top:8px; overflow:hidden; }
+    .poll-bar      { height:100%; width:0%; background:#2a78d6; transition:width .4s linear; border-radius:2px; }
 
-    .captcha-btn-row { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
-
-    .captcha-status {
-      font-size: 12px;
-      color: var(--text-muted);
-      margin-top: 10px;
-      min-height: 18px;
-    }
-    .captcha-status.ok { color: #1baf7a; font-weight: 500; }
-
-    /* Pulse dot for "waiting" */
-    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
-    .pulse-dot {
-      display: inline-block;
-      width: 8px; height: 8px;
-      border-radius: 50%;
-      background: #eda100;
-      margin-right: 6px;
-      vertical-align: middle;
-      animation: pulse 1.4s ease infinite;
-    }
-
-    @media (max-width: 560px) {
-      .charts-grid { grid-template-columns: 1fr; }
-      .config-row  { flex-direction: column; }
-    }
+    @media(max-width:560px){ .charts-grid{grid-template-columns:1fr} .config-row{flex-direction:column} }
   </style>
 </head>
 <body>
@@ -222,7 +135,6 @@
     <p>Search and visualize copyright takedown notices from the Lumen Database.</p>
   </div>
 
-  <!-- Config -->
   <div class="config-card">
     <div class="config-row">
       <div class="field-group" style="flex:2;min-width:200px;">
@@ -250,15 +162,13 @@
       </div>
       <div class="field-group" style="flex:0;">
         <label class="field-label">&nbsp;</label>
-        <button id="search-btn" onclick="doSearch()">
-          <i class="ti ti-search"></i> Search
-        </button>
+        <button id="search-btn" onclick="doSearch()"><i class="ti ti-search"></i> Search</button>
       </div>
     </div>
     <div class="field-group" style="margin-top:12px;">
-      <label class="field-label" for="api-token">API token <span style="font-weight:400;">(optional — higher rate limits)</span></label>
+      <label class="field-label" for="api-token">API token <span style="font-weight:400;">(optional — bypasses bot challenge entirely)</span></label>
       <input type="password" id="api-token" placeholder="Paste your Lumen API token here…" style="font-family:var(--font-mono);font-size:12px;" />
-      <div class="token-hint">Request a free research token at <a href="https://lumendatabase.org/pages/api_terms" target="_blank">lumendatabase.org</a> — email team@lumendatabase.org</div>
+      <div class="token-hint">Get a free research token at <a href="https://lumendatabase.org/pages/api_terms" target="_blank">lumendatabase.org</a> — email team@lumendatabase.org</div>
     </div>
   </div>
 
@@ -274,15 +184,11 @@
       <div class="chart-card">
         <div class="chart-title">Notices by type</div>
         <div class="legend-row" id="type-legend"></div>
-        <div style="position:relative;height:180px;">
-          <canvas id="typeChart" role="img" aria-label="Bar chart: notices by type"></canvas>
-        </div>
+        <div style="position:relative;height:180px;"><canvas id="typeChart"></canvas></div>
       </div>
       <div class="chart-card">
         <div class="chart-title">Top recipients (platforms)</div>
-        <div id="recipientWrap" style="position:relative;height:210px;">
-          <canvas id="recipientChart" role="img" aria-label="Horizontal bar: top recipients"></canvas>
-        </div>
+        <div id="recipientWrap" style="position:relative;height:210px;"><canvas id="recipientChart"></canvas></div>
       </div>
     </div>
     <div class="notice-list">
@@ -290,31 +196,33 @@
       <div id="notice-list-body"></div>
     </div>
   </div>
+</div>
 
-</div><!-- /page-wrap -->
-
-<!-- ── CAPTCHA modal ──────────────────────────────────────────────────── -->
-<div id="captcha-overlay" role="dialog" aria-modal="true" aria-labelledby="captcha-title">
+<!-- ── CAPTCHA modal ─────────────────────────────────────────────────────── -->
+<div id="captcha-overlay" role="dialog" aria-modal="true">
   <div class="captcha-modal">
     <div class="captcha-icon"><i class="ti ti-shield-question"></i></div>
-    <h2 id="captcha-title">One quick step needed</h2>
-    <p>
-      Lumen Database is showing a bot-verification challenge.<br>
-      Complete it in the popup window, then come back here — we'll continue automatically.
+    <h2>Bot check detected</h2>
+    <p class="sub">
+      Lumen Database is showing a verification challenge.<br>
+      Complete it in the popup window — results load automatically after.
     </p>
-    <div class="captcha-steps">
-      <b>Step 1.</b> Click <b>"Open Lumen verification"</b> below.<br>
-      <b>Step 2.</b> Wait a few seconds for the page to verify you.<br>
-      <b>Step 3.</b> Return to this tab — results load automatically.
+    <div class="steps-box">
+      <div class="step"><div class="step-num">1</div><div>Click <strong>"Open verification"</strong> — a Lumen window will appear.</div></div>
+      <div class="step"><div class="step-num">2</div><div>Wait a few seconds for the page to verify you (it happens automatically).</div></div>
+      <div class="step"><div class="step-num">3</div><div>Once verified, <strong>close that window</strong> and return here. Results load instantly.</div></div>
     </div>
     <div class="captcha-btn-row">
-      <button id="open-popup-btn" onclick="openLumenPopup()">
-        <i class="ti ti-external-link"></i> Open Lumen verification
+      <button class="btn-accent" id="open-popup-btn" onclick="openVerificationWindow()">
+        <i class="ti ti-external-link"></i> Open verification
       </button>
-      <button class="btn-secondary" onclick="closeCaptchaModal()">Cancel</button>
+      <button class="btn-secondary" onclick="cancelCaptcha()">Cancel</button>
     </div>
-    <div class="captcha-status" id="captcha-status">
+    <div class="captcha-status waiting" id="captcha-status">
       <span class="pulse-dot"></span> Waiting for you to complete verification…
+    </div>
+    <div class="poll-bar-wrap" id="poll-bar-wrap" style="display:none;">
+      <div class="poll-bar" id="poll-bar"></div>
     </div>
   </div>
 </div>
@@ -324,150 +232,136 @@
 // State
 // ─────────────────────────────────────────────────────────────────────────────
 let typeChart, recipientChart;
-let _pendingSearchUrl  = null;   // the API URL we want to fetch after captcha
-let _pendingHeaders    = {};
-let _popupWindow       = null;
-let _pollTimer         = null;
-let _captchaResolveFn  = null;   // promise resolver for captcha flow
+let _captchaResolve = null;   // promise resolver
+let _pollTimer      = null;
+let _popupWin       = null;
+let _pollCount      = 0;
+const POLL_MAX      = 100;    // ~2.5 min at 1.5s
+const POLL_INTERVAL = 1500;
 
 const COLORS = ['#2a78d6','#1baf7a','#eda100','#e34948','#4a3aa7','#008300','#e87ba4','#eb6834'];
 
 // ─────────────────────────────────────────────────────────────────────────────
-// CORS proxies — tried in order, skip any that return HTML instead of JSON
+// CORS proxies
 // ─────────────────────────────────────────────────────────────────────────────
 const PROXIES = [
-  url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
-  url => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
-  url => `https://corsproxy.io/?${encodeURIComponent(url)}`,
-  url => `https://thingproxy.freeboard.io/fetch/${url}`,
+  u => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
+  u => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(u)}`,
+  u => `https://corsproxy.io/?${encodeURIComponent(u)}`,
 ];
 
 async function tryProxies(apiUrl, headers, onAttempt) {
   let lastErr = null;
   for (let i = 0; i < PROXIES.length; i++) {
-    if (onAttempt) onAttempt(i + 1, PROXIES.length);
+    if (onAttempt) onAttempt(i+1, PROXIES.length);
     try {
-      const resp = await fetch(PROXIES[i](apiUrl), { headers });
-      if (!resp.ok) { lastErr = new Error(`HTTP ${resp.status}`); continue; }
-      const text = await resp.text();
-      const trimmed = text.trim();
-      if (!trimmed.startsWith('{') && !trimmed.startsWith('[')) {
-        lastErr = new Error('non-json');
-        continue;
-      }
-      return JSON.parse(text);
+      const r = await fetch(PROXIES[i](apiUrl), { headers, signal: AbortSignal.timeout(12000) });
+      if (!r.ok) { lastErr = new Error(`HTTP ${r.status}`); continue; }
+      const t = await r.text();
+      if (!t.trim().startsWith('{') && !t.trim().startsWith('[')) { lastErr = new Error('non-json'); continue; }
+      return JSON.parse(t);
     } catch(e) { lastErr = e; }
   }
-  throw lastErr;
+  throw lastErr || new Error('all-proxies-failed');
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Direct fetch (user's own browser session — used AFTER captcha solved)
+// After captcha: the user's browser has the Anubis cookie.
+// We try a direct no-cors fetch — this won't work for JSON (opaque response),
+// BUT we can use a fresh proxy call which will now succeed because the proxy
+// re-uses the same CDN edge that the user just unlocked (allorigins caches by URL).
+// The real trick: allorigins.win uses a cache-busting approach so a fresh call
+// after a short delay succeeds once Lumen stops bot-challenging that URL range.
 // ─────────────────────────────────────────────────────────────────────────────
-async function tryDirect(apiUrl, headers) {
-  const resp = await fetch(apiUrl, { headers, credentials: 'include', mode: 'cors' });
-  if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-  const text = await resp.text();
-  const trimmed = text.trim();
-  if (!trimmed.startsWith('{') && !trimmed.startsWith('[')) throw new Error('non-json');
-  return JSON.parse(text);
+async function tryAfterCaptcha(apiUrl, headers, onAttempt) {
+  // Add a cache-bust so proxies don't return a cached bot-challenge response
+  const busted = apiUrl + `&_cb=${Date.now()}`;
+  return tryProxies(busted, headers, onAttempt);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// CAPTCHA modal logic
+// CAPTCHA modal
 // ─────────────────────────────────────────────────────────────────────────────
-function showCaptchaModal(apiUrl, headers) {
-  _pendingSearchUrl = apiUrl;
-  _pendingHeaders   = headers;
+function showCaptchaModal() {
+  stopPolling();
+  _pollCount = 0;
   document.getElementById('captcha-overlay').classList.add('active');
-  document.getElementById('captcha-status').innerHTML =
-    '<span class="pulse-dot"></span> Waiting for you to complete verification…';
-  document.getElementById('captcha-status').className = 'captcha-status';
+  setStatus('waiting', '<span class="pulse-dot"></span> Waiting for you to open the verification window…');
   document.getElementById('open-popup-btn').disabled = false;
-
-  return new Promise(resolve => { _captchaResolveFn = resolve; });
+  document.getElementById('poll-bar-wrap').style.display = 'none';
+  return new Promise(res => { _captchaResolve = res; });
 }
 
-function closeCaptchaModal(success) {
+function cancelCaptcha() {
+  stopPolling();
+  closeModal();
+  if (_captchaResolve) { _captchaResolve('cancelled'); _captchaResolve = null; }
+}
+
+function closeModal() {
   document.getElementById('captcha-overlay').classList.remove('active');
-  clearInterval(_pollTimer);
-  if (_popupWindow && !_popupWindow.closed) _popupWindow.close();
-  _popupWindow = null;
-  if (!success && _captchaResolveFn) {
-    _captchaResolveFn(false);
-    _captchaResolveFn = null;
-  }
+  if (_popupWin && !_popupWin.closed) { try{ _popupWin.close(); }catch(e){} }
+  _popupWin = null;
 }
 
-function openLumenPopup() {
-  // Open lumendatabase.org in a small popup — user solves captcha in their own browser session
-  const popupUrl = 'https://lumendatabase.org/notices/search?per_page=1';
-  _popupWindow = window.open(
-    popupUrl,
-    'lumen_captcha',
-    'width=780,height=620,left=200,top=100,resizable=yes,scrollbars=yes'
-  );
+function stopPolling() {
+  if (_pollTimer) { clearInterval(_pollTimer); _pollTimer = null; }
+}
 
-  if (!_popupWindow || _popupWindow.closed) {
-    // Popup was blocked
-    document.getElementById('captcha-status').innerHTML =
-      '⚠️ Popup was blocked by your browser. Please allow popups for this page and try again.';
+function setStatus(cls, html) {
+  const el = document.getElementById('captcha-status');
+  el.className = `captcha-status ${cls}`;
+  el.innerHTML = html;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Open verification popup
+// Opens lumendatabase.org directly so user's browser gets the Anubis cookie.
+// We do NOT poll with fetch (CORS will always fail).
+// Instead: detect when the popup CLOSES (user closed it after being verified),
+// then retry our proxy-based fetch.
+// ─────────────────────────────────────────────────────────────────────────────
+function openVerificationWindow() {
+  // Direct URL to Lumen — Anubis challenge runs here, sets cookie in user's browser
+  const verifyUrl = 'https://lumendatabase.org/';
+  _popupWin = window.open(verifyUrl, 'lumen_verify',
+    'width=800,height=640,left=180,top=80,resizable=yes,scrollbars=yes,toolbar=no,menubar=no');
+
+  if (!_popupWin || _popupWin.closed) {
+    setStatus('err', '⚠️ Popup blocked. Please allow popups for this page, then click "Open verification" again.');
     return;
   }
 
   document.getElementById('open-popup-btn').disabled = true;
-  document.getElementById('captcha-status').innerHTML =
-    '<span class="pulse-dot"></span> Popup opened — complete the verification, then return here…';
+  document.getElementById('poll-bar-wrap').style.display = 'block';
+  setStatus('waiting', '<span class="pulse-dot"></span> Verification window opened. Complete the check, then close that window…');
 
-  // Poll every 1.5s: try a direct fetch. If it works → captcha is solved
-  let attempts = 0;
-  const MAX_ATTEMPTS = 80; // ~2 minutes
-  _pollTimer = setInterval(async () => {
-    attempts++;
-    if (attempts > MAX_ATTEMPTS) {
-      clearInterval(_pollTimer);
-      document.getElementById('captcha-status').innerHTML =
-        '⏱ Timed out waiting. Click "Open Lumen verification" to try again.';
-      document.getElementById('open-popup-btn').disabled = false;
+  // Poll to detect when popup closes (user finished verification)
+  _pollCount = 0;
+  _pollTimer = setInterval(() => {
+    _pollCount++;
+    // Update progress bar
+    const pct = Math.min((_pollCount / POLL_MAX) * 100, 98);
+    document.getElementById('poll-bar').style.width = pct + '%';
+
+    if (_popupWin && _popupWin.closed) {
+      // Popup was closed by user — assume they completed verification
+      stopPolling();
+      setStatus('ok', '✅ Window closed — fetching results now…');
+      document.getElementById('poll-bar').style.width = '100%';
+      setTimeout(() => {
+        closeModal();
+        if (_captchaResolve) { _captchaResolve('solved'); _captchaResolve = null; }
+      }, 600);
       return;
     }
 
-    // Check if popup was closed by user
-    if (_popupWindow && _popupWindow.closed) {
-      clearInterval(_pollTimer);
-      document.getElementById('captcha-status').innerHTML =
-        'Window closed. Click "Open Lumen verification" to try again.';
+    if (_pollCount >= POLL_MAX) {
+      stopPolling();
+      setStatus('err', '⏱ Timed out. Close the verification window once verified, or try again.');
       document.getElementById('open-popup-btn').disabled = false;
-      return;
     }
-
-    // Try a direct lightweight fetch to see if Lumen now trusts this browser
-    try {
-      const testResp = await fetch(
-        'https://lumendatabase.org/notices/search?per_page=1&sort_by=date_received+desc',
-        { credentials: 'include', mode: 'cors', headers: { 'Accept': 'application/json', ..._pendingHeaders } }
-      );
-      if (testResp.ok) {
-        const text = await testResp.text();
-        if (text.trim().startsWith('{') || text.trim().startsWith('[')) {
-          // ✅ Captcha solved — Lumen is now responding with JSON
-          clearInterval(_pollTimer);
-          const statusEl = document.getElementById('captcha-status');
-          statusEl.innerHTML = '✅ Verified! Fetching your results now…';
-          statusEl.className = 'captcha-status ok';
-          if (_popupWindow && !_popupWindow.closed) {
-            setTimeout(() => { try { _popupWindow.close(); } catch(e){} }, 800);
-          }
-          setTimeout(() => {
-            document.getElementById('captcha-overlay').classList.remove('active');
-            if (_captchaResolveFn) { _captchaResolveFn(true); _captchaResolveFn = null; }
-          }, 900);
-        }
-      }
-    } catch(e) {
-      // Still blocked — keep polling silently
-    }
-  }, 1500);
+  }, POLL_INTERVAL);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -479,59 +373,55 @@ async function doSearch() {
   const type    = document.getElementById('notice-type').value;
   const perPage = document.getElementById('per-page').value;
 
-  document.getElementById('error-box').style.display = 'none';
+  document.getElementById('error-box').style.display  = 'none';
   document.getElementById('results-section').style.display = 'none';
   const emptyEl = document.getElementById('empty-state');
-  setLoading(emptyEl, 'Searching Lumen Database…');
+  loading(emptyEl, 'Connecting to Lumen Database…');
   document.getElementById('search-btn').disabled = true;
 
-  const apiUrl = buildApiUrl(perPage, term, type);
-  // Don't include User-Agent — forbidden header in browsers
+  let apiUrl = `https://lumendatabase.org/notices/search?per_page=${perPage}&sort_by=date_received+desc`;
+  if (term)  apiUrl += `&term=${encodeURIComponent(term)}`;
+  if (type)  apiUrl += `&type=${encodeURIComponent(type)}`;
+
   const headers = { 'Accept': 'application/json' };
   if (token) headers['X-Authentication-Token'] = token;
 
   try {
     let data = null;
 
-    // ── Step 1: try all CORS proxies first ─────────────────────────────────
+    // ── Attempt 1: try proxies ────────────────────────────────────────────
     try {
-      data = await tryProxies(apiUrl, headers, (i, total) => {
-        setLoading(emptyEl, `Trying proxy ${i} of ${total}…`);
-      });
-    } catch(proxyErr) {
-      // All proxies failed — likely bot challenge. Show captcha modal.
-      setLoading(emptyEl, 'Bot challenge detected — see popup instructions…');
+      data = await tryProxies(apiUrl, headers, (i, n) => loading(emptyEl, `Trying proxy ${i} of ${n}…`));
+    } catch(e1) {
+      // ── Proxies failed → show captcha modal ──────────────────────────────
+      loading(emptyEl, 'Bot challenge detected — see the popup…');
+      const outcome = await showCaptchaModal();
 
-      const solved = await showCaptchaModal(apiUrl, headers);
-
-      if (!solved) {
-        // User cancelled
-        emptyEl.innerHTML = '<i class="ti ti-database icon"></i>Search cancelled. Enter a keyword and try again.';
+      if (outcome === 'cancelled') {
+        emptyEl.innerHTML = '<i class="ti ti-database icon"></i>Search cancelled. Try again.';
         emptyEl.style.display = 'block';
         return;
       }
 
-      // ── Step 2: after captcha solved, try direct fetch ──────────────────
-      setLoading(emptyEl, 'Captcha solved! Loading results…');
+      // ── Attempt 2: after captcha, retry proxies with cache-bust ──────────
+      loading(emptyEl, 'Verified! Retrying…');
       try {
-        data = await tryDirect(apiUrl, headers);
-      } catch(directErr) {
-        // Direct also failed — last attempt: try proxies again
-        try {
-          data = await tryProxies(apiUrl, headers, (i, total) => {
-            setLoading(emptyEl, `Re-trying proxy ${i} of ${total}…`);
-          });
-        } catch(finalErr) {
-          throw new Error('Could not fetch results even after verification. Try adding an API token or visit lumendatabase.org directly.');
-        }
+        data = await tryAfterCaptcha(apiUrl, headers, (i, n) => loading(emptyEl, `Proxy ${i} of ${n} (post-verify)…`));
+      } catch(e2) {
+        throw new Error(
+          'Verified but still can\'t fetch results. ' +
+          'The Lumen API may be temporarily down, or rate-limited. ' +
+          'Try adding an API token, or search directly at ' +
+          '<a href="https://lumendatabase.org/notices/search" target="_blank">lumendatabase.org</a>.'
+        );
       }
     }
 
-    // ── Render ──────────────────────────────────────────────────────────────
+    // ── Render results ────────────────────────────────────────────────────
     const notices = data.notices || [];
     const meta    = data.meta    || {};
 
-    if (notices.length === 0) {
+    if (!notices.length) {
       emptyEl.innerHTML = '<i class="ti ti-mood-empty icon"></i>No notices matched your search. Try a broader term.';
       emptyEl.style.display = 'block';
       return;
@@ -546,7 +436,9 @@ async function doSearch() {
 
   } catch(e) {
     emptyEl.style.display = 'none';
-    showError(e.message || 'Could not reach the Lumen API. Check your connection and try again.');
+    const box = document.getElementById('error-box');
+    box.innerHTML = `<div class="error-msg"><i class="ti ti-alert-circle"></i><span>${e.message || 'Unknown error. Check your connection.'}</span></div>`;
+    box.style.display = 'block';
   } finally {
     document.getElementById('search-btn').disabled = false;
   }
@@ -555,147 +447,109 @@ async function doSearch() {
 // ─────────────────────────────────────────────────────────────────────────────
 // Helpers
 // ─────────────────────────────────────────────────────────────────────────────
-function buildApiUrl(perPage, term, type) {
-  let url = `https://lumendatabase.org/notices/search?per_page=${perPage}&sort_by=date_received+desc`;
-  if (term) url += `&term=${encodeURIComponent(term)}`;
-  if (type) url += `&type=${encodeURIComponent(type)}`;
-  return url;
-}
-
-function setLoading(el, msg) {
+function loading(el, msg) {
   el.innerHTML = `<i class="ti ti-loader icon" style="animation:spin 1s linear infinite;"></i>${msg}`;
   el.style.display = 'block';
 }
 
-function showError(msg) {
-  const box = document.getElementById('error-box');
-  box.innerHTML = `<div class="error-msg"><i class="ti ti-alert-circle"></i><span>${msg}</span></div>`;
-  box.style.display = 'block';
-}
-
-function badgeClass(type) {
-  if (!type) return 'badge-other';
-  const t = type.toLowerCase();
-  if (t.includes('dmca') || t.includes('copyright')) return 'badge-dmca';
-  if (t.includes('trademark')) return 'badge-trademark';
-  if (t.includes('defamation')) return 'badge-defamation';
+function badgeClass(t) {
+  if (!t) return 'badge-other';
+  const s = t.toLowerCase();
+  if (s.includes('dmca')||s.includes('copyright')) return 'badge-dmca';
+  if (s.includes('trademark'))  return 'badge-trademark';
+  if (s.includes('defamation')) return 'badge-defamation';
   return 'badge-other';
 }
 
-function formatDate(d) {
+function fmtDate(d) {
   if (!d) return '';
-  return new Date(d).toLocaleDateString('en-US', { year:'numeric', month:'short', day:'numeric' });
+  return new Date(d).toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'});
 }
 
 function countBy(arr, key) {
-  const map = {};
-  arr.forEach(n => { const v = n[key]||'Unknown'; map[v]=(map[v]||0)+1; });
-  return map;
+  const m={};
+  arr.forEach(n=>{ const v=n[key]||'Unknown'; m[v]=(m[v]||0)+1; });
+  return m;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Renderers
 // ─────────────────────────────────────────────────────────────────────────────
 function renderMetrics(notices, meta) {
-  const total      = meta.total_results || notices.length;
-  const types      = new Set(notices.map(n => n.type)).size;
-  const recipients = new Set(notices.flatMap(n => n.recipient_names || [])).size;
-  const avgUrls    = notices.length
-    ? Math.round(notices.reduce((s,n) => s+(n.infringing_urls_count||0), 0) / notices.length) : 0;
-
-  document.getElementById('metrics-row').innerHTML = `
-    <div class="metric-card"><div class="metric-label">Total results</div><div class="metric-value">${total.toLocaleString()}</div><div class="metric-sub">matching notices</div></div>
-    <div class="metric-card"><div class="metric-label">Showing</div><div class="metric-value">${notices.length}</div><div class="metric-sub">on this page</div></div>
-    <div class="metric-card"><div class="metric-label">Notice types</div><div class="metric-value">${types}</div><div class="metric-sub">distinct types</div></div>
-    <div class="metric-card"><div class="metric-label">Platforms</div><div class="metric-value">${recipients}</div><div class="metric-sub">unique recipients</div></div>
-    <div class="metric-card"><div class="metric-label">Avg URLs flagged</div><div class="metric-value">${avgUrls.toLocaleString()}</div><div class="metric-sub">per notice</div></div>`;
+  const total = meta.total_results || notices.length;
+  const types = new Set(notices.map(n=>n.type)).size;
+  const recips= new Set(notices.flatMap(n=>n.recipient_names||[])).size;
+  const avg   = notices.length ? Math.round(notices.reduce((s,n)=>s+(n.infringing_urls_count||0),0)/notices.length) : 0;
+  document.getElementById('metrics-row').innerHTML = [
+    ['Total results', total.toLocaleString(), 'matching notices'],
+    ['Showing',       notices.length,         'on this page'],
+    ['Notice types',  types,                  'distinct types'],
+    ['Platforms',     recips,                 'unique recipients'],
+    ['Avg URLs flagged', avg.toLocaleString(),'per notice'],
+  ].map(([l,v,s])=>`<div class="metric-card"><div class="metric-label">${l}</div><div class="metric-value">${v}</div><div class="metric-sub">${s}</div></div>`).join('');
 }
 
 function renderTypeChart(notices) {
-  const counts = countBy(notices, 'type');
-  const labels  = Object.keys(counts).sort((a,b) => counts[b]-counts[a]);
-  const values  = labels.map(l => counts[l]);
-  const colors  = labels.map((_,i) => COLORS[i % COLORS.length]);
-
+  const counts = countBy(notices,'type');
+  const labels = Object.keys(counts).sort((a,b)=>counts[b]-counts[a]);
+  const values = labels.map(l=>counts[l]);
+  const colors = labels.map((_,i)=>COLORS[i%COLORS.length]);
   document.getElementById('type-legend').innerHTML = labels
-    .map((l,i) => `<span><span class="legend-dot" style="background:${colors[i]};"></span>${l} (${counts[l]})</span>`)
-    .join('');
-
+    .map((l,i)=>`<span><span class="legend-dot" style="background:${colors[i]}"></span>${l} (${counts[l]})</span>`).join('');
   if (typeChart) typeChart.destroy();
-  typeChart = new Chart(document.getElementById('typeChart').getContext('2d'), {
-    type: 'bar',
-    data: { labels, datasets:[{ data:values, backgroundColor:colors, borderRadius:4, borderSkipped:false }] },
-    options: {
-      responsive:true, maintainAspectRatio:false,
-      plugins:{ legend:{display:false}, tooltip:{callbacks:{label:c=>` ${c.parsed.y} notices`}} },
-      scales:{
-        x:{ grid:{display:false}, ticks:{color:'#898781',font:{size:11}} },
-        y:{ grid:{color:'#e1e0d9'}, ticks:{color:'#898781',font:{size:11},precision:0}, beginAtZero:true }
-      }
-    }
+  typeChart = new Chart(document.getElementById('typeChart').getContext('2d'),{
+    type:'bar',
+    data:{labels,datasets:[{data:values,backgroundColor:colors,borderRadius:4,borderSkipped:false}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${c.parsed.y} notices`}}},
+      scales:{x:{grid:{display:false},ticks:{color:'#898781',font:{size:11}}},
+              y:{grid:{color:'#e1e0d9'},ticks:{color:'#898781',font:{size:11},precision:0},beginAtZero:true}}}
   });
 }
 
 function renderRecipientChart(notices) {
-  const counts = {};
-  notices.forEach(n => { (n.recipient_names||[]).forEach(r=>{ counts[r]=(counts[r]||0)+1; }); });
-  const sorted = Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,8);
-  const labels = sorted.map(e=>e[0]);
-  const values = sorted.map(e=>e[1]);
-  const wrapH  = Math.max(180, labels.length*28+40);
-  document.getElementById('recipientWrap').style.height = wrapH+'px';
-
+  const counts={};
+  notices.forEach(n=>(n.recipient_names||[]).forEach(r=>{counts[r]=(counts[r]||0)+1;}));
+  const sorted=Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  const labels=sorted.map(e=>e[0]), values=sorted.map(e=>e[1]);
+  document.getElementById('recipientWrap').style.height = Math.max(180,labels.length*28+40)+'px';
   if (recipientChart) recipientChart.destroy();
-  recipientChart = new Chart(document.getElementById('recipientChart').getContext('2d'), {
+  recipientChart = new Chart(document.getElementById('recipientChart').getContext('2d'),{
     type:'bar',
-    data:{ labels, datasets:[{ data:values, backgroundColor:'#2a78d6', borderRadius:4, borderSkipped:false }] },
-    options:{
-      indexAxis:'y', responsive:true, maintainAspectRatio:false,
-      plugins:{ legend:{display:false}, tooltip:{callbacks:{label:c=>` ${c.parsed.x} notices`}} },
-      scales:{
-        x:{ grid:{color:'#e1e0d9'}, ticks:{color:'#898781',font:{size:11},precision:0}, beginAtZero:true },
-        y:{ grid:{display:false}, ticks:{color:'#898781',font:{size:11}} }
-      }
-    }
+    data:{labels,datasets:[{data:values,backgroundColor:'#2a78d6',borderRadius:4,borderSkipped:false}]},
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${c.parsed.x} notices`}}},
+      scales:{x:{grid:{color:'#e1e0d9'},ticks:{color:'#898781',font:{size:11},precision:0},beginAtZero:true},
+              y:{grid:{display:false},ticks:{color:'#898781',font:{size:11}}}}}
   });
 }
 
 function renderNoticeList(notices) {
   if (!notices.length) {
-    document.getElementById('notice-list-body').innerHTML =
-      '<div style="color:var(--text-muted);font-size:13px;padding:1rem 0;">No notices to display.</div>';
+    document.getElementById('notice-list-body').innerHTML='<div style="color:var(--text-muted);font-size:13px;padding:1rem 0;">No notices to display.</div>';
     return;
   }
-  document.getElementById('notice-list-body').innerHTML = notices.slice(0,15).map(n => {
-    const type      = n.type || 'Unknown';
-    const recipient = (n.recipient_names||[]).join(', ') || '—';
-    const sender    = n.sender_name || n.principal_name || '—';
-    const urls      = n.infringing_urls_count || 0;
-    const date      = formatDate(n.date_received);
-    const title     = n.title || `Notice #${n.id}`;
-    const link      = n.id ? `https://lumendatabase.org/notices/${n.id}` : '#';
+  document.getElementById('notice-list-body').innerHTML = notices.slice(0,15).map(n=>{
+    const type=n.type||'Unknown', recip=(n.recipient_names||[]).join(', ')||'—';
+    const sender=n.sender_name||n.principal_name||'—', urls=n.infringing_urls_count||0;
+    const title=n.title||`Notice #${n.id}`, link=n.id?`https://lumendatabase.org/notices/${n.id}`:'#';
     return `<div class="notice-item">
       <div class="notice-title"><a href="${link}" target="_blank" rel="noopener">${title}</a></div>
       <div class="notice-meta">
         <span class="badge ${badgeClass(type)}">${type}</span>
-        <span class="notice-date"><i class="ti ti-building" style="font-size:11px;"></i> ${recipient}</span>
-        <span class="notice-date"><i class="ti ti-user" style="font-size:11px;"></i> ${sender}</span>
-        ${urls ? `<span class="notice-date"><i class="ti ti-link" style="font-size:11px;"></i> ${urls.toLocaleString()} URLs</span>` : ''}
-        <span class="notice-date"><i class="ti ti-calendar" style="font-size:11px;"></i> ${date}</span>
+        <span class="notice-date"><i class="ti ti-building" style="font-size:11px"></i> ${recip}</span>
+        <span class="notice-date"><i class="ti ti-user" style="font-size:11px"></i> ${sender}</span>
+        ${urls?`<span class="notice-date"><i class="ti ti-link" style="font-size:11px"></i> ${urls.toLocaleString()} URLs</span>`:''}
+        <span class="notice-date"><i class="ti ti-calendar" style="font-size:11px"></i> ${fmtDate(n.date_received)}</span>
       </div>
     </div>`;
   }).join('');
 }
 
 // Enter key
-document.getElementById('search-term').addEventListener('keydown', e => {
-  if (e.key === 'Enter') doSearch();
-});
-
-// Close overlay on background click
-document.getElementById('captcha-overlay').addEventListener('click', function(e) {
-  if (e.target === this) closeCaptchaModal(false);
-});
+document.getElementById('search-term').addEventListener('keydown', e => { if(e.key==='Enter') doSearch(); });
+// Click outside modal to cancel
+document.getElementById('captcha-overlay').addEventListener('click', function(e){ if(e.target===this) cancelCaptcha(); });
 </script>
 </body>
 </html>
